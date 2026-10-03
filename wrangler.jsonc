@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "local-studio-mail",
+  "main": "index.ts",
+  "compatibility_date": "2026-07-01",
+  "workers_dev": true,
+  "vars": { "DOMAIN": "example.com" },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "local-studio-mail",
+    "database_id": "00000000-0000-0000-0000-000000000000",
+    "migrations_dir": "migrations"
+  }],
+  "triggers": { "crons": ["17 3 * * *"] },
+  "observability": { "enabled": false }
+}

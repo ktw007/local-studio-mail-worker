@@ -1,0 +1,3 @@
+# Cloudflare deploy wizard asks the user for this secret. Never use a shared default.
+# Generate a random 64-character hex value, save it, and enter it in the deploy wizard.
+SERVICE_TOKEN=
