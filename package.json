@@ -5,7 +5,9 @@
   "description": "自托管域名收件箱：Cloudflare Email Routing、Worker 与 D1，适用于免费账号的轻量使用。",
   "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=22.12" },
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "dev": "wrangler d1 migrations apply DB --local && wrangler dev",
     "check": "tsc --noEmit",
@@ -14,7 +16,10 @@
     "predeploy": "wrangler d1 migrations apply DB --remote",
     "deploy": "wrangler deploy"
   },
-  "dependencies": { "postal-mime": "4.0.2" },
+  "dependencies": {
+    "htmlparser2": "10.0.0",
+    "postal-mime": "4.0.2"
+  },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261003.1",
     "@types/node": "24.10.0",
@@ -26,12 +31,23 @@
   },
   "cloudflare": {
     "label": "Local Studio Mail",
-    "products": ["Workers", "D1"],
-    "categories": ["storage"],
+    "products": [
+      "Workers",
+      "D1"
+    ],
+    "categories": [
+      "storage"
+    ],
     "bindings": {
-      "DOMAIN": { "description": "填写已启用 Email Routing 的域名，例如 mail.example.org；不带 https:// 或 @。部署后仍需把邮件路由指向此 Worker。" },
-      "DB": { "description": "新建本服务专用 D1，保存邮箱和邮件；不要绑定已有业务数据库。" },
-      "SERVICE_TOKEN": { "description": "生成并保存一个随机服务密钥（建议 64 位十六进制字符）。桌面端用同一密钥连接邮箱。这里不是 Cloudflare API Token。" }
+      "DOMAIN": {
+        "description": "填写已启用 Email Routing 的域名，例如 mail.example.org；不带 https:// 或 @。部署后仍需把邮件路由指向此 Worker。"
+      },
+      "DB": {
+        "description": "新建本服务专用 D1，保存邮箱和邮件；不要绑定已有业务数据库。"
+      },
+      "SERVICE_TOKEN": {
+        "description": "生成并保存一个随机服务密钥（建议 64 位十六进制字符）。桌面端用同一密钥连接邮箱。这里不是 Cloudflare API Token。"
+      }
     }
   }
 }

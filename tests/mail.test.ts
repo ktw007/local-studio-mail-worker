@@ -6,7 +6,16 @@ import path from "node:path";
 import { build } from "esbuild";
 import { Miniflare } from "miniflare";
 import worker, { type MailEnv } from "../index";
+import { htmlMailText } from "../html-text";
 import type { ForwardableEmailMessage } from "@cloudflare/workers-types";
+
+test("HTML mail text decodes entities and keeps split codes without scripts, hidden text or URLs", () => {
+  const result = htmlMailText('<html><head><style>.x{color:red}</style></head><body><p>你的 ChatGPT 临时验证码</p><div><span>&#49;23</span><b>456</b></div><script>987654</script><div hidden>111111</div><div style="display:none"><b>222222</b></div><img src="https://tracker.invalid/pixel"><a href="https://secret.invalid/token">帮助 &amp; 支持</a></body></html>');
+  assert.match(result, /123456/);
+  assert.match(result, /帮助 & 支持/);
+  assert.doesNotMatch(result, /987654|111111|222222|tracker|secret|<|color:red/);
+  assert.equal(htmlMailText('<p>'+"a".repeat(200000)+'</p>', 50).length <= 50, true);
+});
 
 test("mail service: authentication, isolation, MIME, duplicate delivery, lifecycle, retention and restart", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "studio-mail-"));
@@ -120,6 +129,12 @@ test("mail service: authentication, isolation, MIME, duplicate delivery, lifecyc
     };
     assert.equal(detail.subject, "验证码");
     assert.match(detail.body, /123456/);
+    const htmlRaw = 'From: sender@example.org\r\nTo: bob@example.com\r\nSubject: HTML verification\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: base64\r\n\r\n' + Buffer.from('<p>你的 ChatGPT 临时验证码</p><div><b>654</b><span>321</span></div><script>111111</script><img src="https://tracker.invalid/pixel">').toString('base64');
+    assert.equal(await deliver("bob@example.com", htmlRaw), "");
+    const htmlId = (await list(b))[0].id;
+    const htmlDetail = await (await request(`/v1/messages/${htmlId}`)).json() as { body: string };
+    assert.match(htmlDetail.body, /654321/);
+    assert.doesNotMatch(htmlDetail.body, /111111|tracker|仅包含 HTML|<script/);
     for (const status of ["disabled", "deleted"]) {
       assert.equal(
         (await request(`/v1/mailboxes/${a}`, "PATCH", { name: "A", status }))
@@ -157,4 +172,3 @@ test("mail service: authentication, isolation, MIME, duplicate delivery, lifecyc
     await rm(directory, { recursive: true, force: true });
   }
 });
-

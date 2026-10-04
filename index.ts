@@ -1,4 +1,5 @@
 import PostalMime from "postal-mime";
+import { htmlMailText } from "./html-text";
 import type {
   D1Database,
   ForwardableEmailMessage,
@@ -205,9 +206,9 @@ export default {
       return;
     }
     // Never render HTML or load remote images. Attachments are deliberately not stored.
-    const content =
-      parsed.text ||
-      (parsed.html ? "[此邮件仅包含 HTML，首版不显示 HTML 正文]" : "");
+    const content = parsed.text?.trim()
+      ? parsed.text
+      : parsed.html ? htmlMailText(parsed.html) : "";
     // Database failures propagate so the provider can retry; never acknowledge a lost message.
     const inserted = await env.DB.prepare(
       "INSERT INTO messages (id,mailbox_id,fingerprint,sender,subject,body,received_at) SELECT ?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM mailboxes WHERE id=? AND status='active') ON CONFLICT(mailbox_id,fingerprint) DO NOTHING",
